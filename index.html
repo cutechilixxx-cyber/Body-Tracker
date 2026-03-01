@@ -63,6 +63,17 @@
         .p-bar-fill { height: 100%; border-radius: 20px; width: 0%; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
         .advice-box { background: rgba(0,0,0,0.1); padding: 14px; border-radius: 20px; font-size: 0.85rem; border-left: 4px solid var(--accent); margin-top: 15px; display: flex; gap: 10px; }
+
+        /* HISTORY SECTION */
+        .history-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .history-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--card-bg); padding: 15px 20px; border-radius: 20px; 
+            margin-bottom: 10px; border: 1px solid var(--border); font-size: 0.9rem;
+        }
+        .history-time { color: var(--text-dim); font-size: 0.75rem; }
+        .btn-hist { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .btn-del { color: #f87171; background: none; border: none; font-size: 1.2rem; cursor: pointer; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -108,36 +119,54 @@
         </div>
 
         <div id="nutrient-list"></div>
+
+        <div class="history-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--text-dim);">STATS HISTORY</h3>
+                <button class="btn-tool" onclick="clearFullStats()" style="font-size: 0.7rem;">CLEAR ALL</button>
+            </div>
+            <div id="history-list">
+                <p style="text-align:center; color: var(--text-dim); font-size: 0.8rem;">No activity yet</p>
+            </div>
+        </div>
     </div>
 
 <script>
     let currentLang = 'RU';
+    let history = [];
+    
     const foods = [
-        { id: 'broccoli', name: {RU: '🥦 Брокколи', EN: '🥦 Broccoli'}, iron: 0.7, mag: 21, vitC: 89 },
-        { id: 'beef', name: {RU: '🥩 Говядина', EN: '🥩 Beef'}, iron: 2.6, mag: 20, vitC: 0 },
-        { id: 'spinach', name: {RU: '🌿 Шпинат', EN: '🌿 Spinach'}, iron: 2.7, mag: 79, vitC: 28 },
-        { id: 'orange', name: {RU: '🍊 Апельсин', EN: '🍊 Orange'}, iron: 0.1, mag: 10, vitC: 53 },
-        { id: 'nuts', name: {RU: '🥜 Орехи', EN: '🥜 Nuts'}, iron: 3.7, mag: 158, vitC: 0 }
+        { id: 'broccoli', name: {RU: '🥦 Брокколи', EN: '🥦 Broccoli'}, iron: 0.7, mag: 21, vitC: 89, vitA: 31, vitD: 0, vitE: 0.17, vitK: 102, vitB12: 0 },
+        { id: 'beef', name: {RU: '🥩 Говядина', EN: '🥩 Beef'}, iron: 2.6, mag: 20, vitC: 0, vitA: 0, vitD: 0.1, vitE: 0.1, vitK: 1.1, vitB12: 2.6 },
+        { id: 'spinach', name: {RU: '🌿 Шпинат', EN: '🌿 Spinach'}, iron: 2.7, mag: 79, vitC: 28, vitA: 469, vitD: 0, vitE: 2, vitK: 483, vitB12: 0 },
+        { id: 'orange', name: {RU: '🍊 Апельсин', EN: '🍊 Orange'}, iron: 0.1, mag: 10, vitC: 53, vitA: 11, vitD: 0, vitE: 0.18, vitK: 0, vitB12: 0 },
+        { id: 'salmon', name: {RU: '🐟 Лосось', EN: '🐟 Salmon'}, iron: 0.3, mag: 27, vitC: 0, vitA: 12, vitD: 11, vitE: 1.1, vitK: 0.5, vitB12: 3.2 },
+        { id: 'eggs', name: {RU: '🥚 Яйца', EN: '🥚 Eggs'}, iron: 1.2, mag: 10, vitC: 0, vitA: 140, vitD: 2, vitE: 1.1, vitK: 0.3, vitB12: 1.1 },
+        { id: 'nuts', name: {RU: '🥜 Орехи', EN: '🥜 Nuts'}, iron: 3.7, mag: 158, vitC: 0, vitA: 1, vitD: 0, vitE: 25, vitK: 2.7, vitB12: 0 }
     ];
 
     const nutrients = [
-        { id: 'Iron', emoji: '🥩', cur: 0, norm: 18, color: '#f87171', advice: {RU: 'Мясо и шпинат.', EN: 'Meat and spinach.'} },
-        { id: 'Magnesium', emoji: '🌿', cur: 0, norm: 400, color: '#34d399', advice: {RU: 'Орехи и авокадо.', EN: 'Nuts and avocado.'} },
-        { id: 'Vitamin C', emoji: '🍊', cur: 0, norm: 90, color: '#38bdf8', advice: {RU: 'Цитрусы и киви.', EN: 'Citrus and kiwi.'} }
+        { key: 'iron', id: 'Iron', emoji: '🥩', cur: 0, norm: 18, color: '#f87171', advice: {RU: 'Мясо и шпинат.', EN: 'Meat and spinach.'} },
+        { key: 'mag', id: 'Magnesium', emoji: '🌿', cur: 0, norm: 400, color: '#34d399', advice: {RU: 'Орехи и авокадо.', EN: 'Nuts and avocado.'} },
+        { key: 'vitC', id: 'Vitamin C', emoji: '🍊', cur: 0, norm: 90, color: '#38bdf8', advice: {RU: 'Цитрусы и киви.', EN: 'Citrus and kiwi.'} },
+        { key: 'vitA', id: 'Vitamin A', emoji: '🥕', cur: 0, norm: 900, color: '#fb923c', advice: {RU: 'Морковь и печень.', EN: 'Carrots and liver.'} },
+        { key: 'vitD', id: 'Vitamin D3', emoji: '☀️', cur: 0, norm: 15, color: '#facc15', advice: {RU: 'Рыба и солнце.', EN: 'Fish and sun.'} },
+        { key: 'vitE', id: 'Vitamin E', emoji: '🌻', cur: 0, norm: 15, color: '#f472b6', advice: {RU: 'Масла и орехи.', EN: 'Oils and nuts.'} },
+        { key: 'vitK', id: 'Vitamin K', emoji: '🥬', cur: 0, norm: 120, color: '#a3e635', advice: {RU: 'Зелень и брокколи.', EN: 'Greens and broccoli.'} },
+        { key: 'vitB12', id: 'Vitamin B12', emoji: '🧬', cur: 0, norm: 2.4, color: '#a78bfa', advice: {RU: 'Мясо и яйца.', EN: 'Meat and eggs.'} }
     ];
 
     function handleLogin() {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
-        initSelect(); render();
+        initSelect(); render(); renderHistory();
     }
 
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
-
     function toggleLang() {
         currentLang = currentLang === 'RU' ? 'EN' : 'RU';
         document.getElementById('lang-btn').innerText = currentLang === 'RU' ? 'EN' : 'RU';
-        initSelect(); render();
+        initSelect(); render(); renderHistory();
     }
 
     function initSelect() {
@@ -145,18 +174,92 @@
     }
 
     function render() {
-        document.getElementById('nutrient-list').innerHTML = nutrients.map(n => {
+        document.getElementById('nutrient-list').innerHTML = nutrients.map((n, index) => {
             const p = Math.min(100, Math.round((n.cur / n.norm) * 100));
             return `
                 <div class="n-card">
                     <div class="n-info">
                         <span style="font-weight: 800;">${n.emoji} ${n.id}</span>
-                        <span style="font-weight: 900; color: ${n.color}">${p}%</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn-hist" onclick="adjustNutrient(${index}, -0.5)">-</button>
+                            <span style="font-weight: 900; color: ${n.color}; min-width: 40px; text-align: center;">${p}%</span>
+                            <button class="btn-hist" onclick="adjustNutrient(${index}, 0.5)">+</button>
+                        </div>
                     </div>
                     <div class="p-bar-bg"><div class="p-bar-fill" style="width: ${p}%; background: ${n.color}"></div></div>
                     <div class="advice-box">🤖 <b>ADVICE:</b> ${n.advice[currentLang]}</div>
                 </div>`;
         }).join('');
+    }
+
+    function adjustNutrient(index, amount) {
+        nutrients[index].cur = Math.max(0, nutrients[index].cur + amount);
+        render();
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-list');
+        if (history.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color: var(--text-dim); font-size: 0.8rem;">No activity yet</p>`;
+            return;
+        }
+        
+        container.innerHTML = history.map((item, index) => `
+            <div class="history-item">
+                <div>
+                    <div style="font-weight: 800;">${item.name}</div>
+                    <div class="history-time">${item.time}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn-hist" onclick="changeEntry(${index}, -10)">-</button>
+                    <div style="color: var(--accent); font-weight: 900; min-width: 40px; text-align: center;">+${item.weight}g</div>
+                    <button class="btn-hist" onclick="changeEntry(${index}, 10)">+</button>
+                    <button class="btn-del" onclick="deleteEntry(${index})">×</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addData(id, weight) {
+        const food = foods.find(f => f.id === id);
+        weight = parseInt(weight);
+        nutrients.forEach(n => { if (food[n.key] !== undefined) n.cur += (food[n.key] * weight) / 100; });
+
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        history.unshift({ id: id, name: food.name[currentLang], weight: weight, time: timeStr });
+
+        render(); renderHistory();
+    }
+
+    function changeEntry(index, amount) {
+        const item = history[index];
+        const food = foods.find(f => f.id === item.id);
+        
+        if (item.weight + amount <= 0) return deleteEntry(index);
+
+        nutrients.forEach(n => { if (food[n.key] !== undefined) n.cur += (food[n.key] * amount) / 100; });
+        item.weight += amount;
+        
+        render(); renderHistory();
+    }
+
+    function deleteEntry(index) {
+        const item = history[index];
+        const food = foods.find(f => f.id === item.id);
+        nutrients.forEach(n => { if (food[n.key] !== undefined) n.cur -= (food[n.key] * item.weight) / 100; });
+        history.splice(index, 1);
+        render(); renderHistory();
+    }
+
+    function clearFullStats() {
+        if(confirm('Clear all?')) { history = []; nutrients.forEach(n => n.cur = 0); render(); renderHistory(); }
+    }
+
+    function manualAdd() {
+        const id = document.getElementById('food-select').value;
+        const weight = document.getElementById('weight-input').value || 100;
+        addData(id, weight); confetti();
     }
 
     document.getElementById('ai-input').addEventListener('change', function(e) {
@@ -168,21 +271,6 @@
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.8 } });
         }, 2000);
     });
-
-    function manualAdd() {
-        const id = document.getElementById('food-select').value;
-        const weight = document.getElementById('weight-input').value || 100;
-        addData(id, weight);
-        confetti();
-    }
-
-    function addData(id, weight) {
-        const food = foods.find(f => f.id === id);
-        nutrients[0].cur += (food.iron * weight) / 100;
-        nutrients[1].cur += (food.mag * weight) / 100;
-        nutrients[2].cur += (food.vitC * weight) / 100;
-        render();
-    }
 </script>
 </body>
 </html>
