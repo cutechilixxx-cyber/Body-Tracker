@@ -4,50 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vitality OS | Elite Edition</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlZpdGFsaXR5IE9TIiwKICAic2hvcnRfbmFtZSI6ICJWaXRhbGl0eSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAmZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGIxMTIwIiwKICAidGhlbWVfY29sb3IiOiAiIzM4YmRmOCIKfQ==">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
         :root {
-            --bg: #0b1120;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --text: #f8fafc;
-            --text-dim: #94a3b8;
-            --border: #334155;
-            --input-bg: #0f172a;
-            --success: #10b981;
-            --danger: #ef4444;
+            --bg: #0b1120; --card-bg: #1e293b; --accent: #38bdf8; --text: #f8fafc;
+            --text-dim: #94a3b8; --border: #334155; --input-bg: #0f172a; --success: #10b981; --danger: #ef4444;
         }
-
         .light-theme {
-            --bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --accent: #0ea5e9;
-            --text: #0f172a;
-            --text-dim: #64748b;
-            --border: #e2e8f0;
-            --input-bg: #f8fafc;
+            --bg: #f1f5f9; --card-bg: #ffffff; --accent: #0ea5e9; --text: #0f172a;
+            --text-dim: #64748b; --border: #e2e8f0; --input-bg: #f8fafc;
         }
-
         * { box-sizing: border-box; transition: all 0.2s ease; font-family: -apple-system, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
 
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { width: 100%; max-width: 400px; padding: 40px; background: var(--card-bg); border-radius: 32px; text-align: center; border: 1px solid var(--border); }
-        
-        #main-app { display: none; width: 100%; max-width: 480px; padding: 20px; padding-top: 60px; padding-bottom: 120px; }
+        .auth-footer { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .auth-link { color: var(--accent); font-size: 0.85rem; text-decoration: none; cursor: pointer; font-weight: 600; background: none; border: none; padding: 5px; }
 
+        #main-app { display: none; width: 100%; max-width: 480px; padding: 20px; padding-top: 60px; padding-bottom: 120px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .btn-tool { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
         .btn-del { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
 
         .streak-badge {
-            display: inline-flex;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.1));
-            border: 1px solid rgba(245, 158, 11, 0.6);
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.4);
             border-radius: 14px;
-            padding: 5px 15px; margin-top: 10px;
+            padding: 8px 15px;
+            margin-top: 10px;
+            width: 100%;
         }
 
         .glass-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 32px; padding: 25px; margin-bottom: 25px; }
@@ -56,24 +47,42 @@
 
         .n-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 28px; padding: 20px; margin-bottom: 15px; }
         .n-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .clickable-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-
         .controls { display: flex; align-items: center; gap: 10px; }
         .btn-inc { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 10px; cursor: pointer; font-weight: bold; }
 
         .p-bar-bg { height: 10px; background: var(--input-bg); border-radius: 20px; overflow: hidden; margin-bottom: 10px; }
-        .p-bar-fill { height: 100%; border-radius: 20px; transition: width 0.5s ease; }
+        .p-bar-fill { height: 100%; border-radius: 20px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
         .week-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 35px; margin-top: 10px; padding-top: 5px; border-top: 1px solid var(--border); }
         .day-column { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .day-bar { width: 8px; border-radius: 2px; min-height: 2px; }
+        .day-bar { width: 8px; border-radius: 2px; min-height: 2px; transition: height 1s ease; }
         .day-label { font-size: 0.55rem; color: var(--text-dim); margin-top: 4px; font-weight: 700; }
 
-        .history-item { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 22px; margin-bottom: 10px; border: 1px solid var(--border); }
-        
+        .history-item { display: flex; flex-direction: column; background: var(--card-bg); padding: 15px 20px; border-radius: 22px; margin-bottom: 10px; border: 1px solid var(--border); }
         .save-container { position: fixed; bottom: 25px; left: 0; right: 0; display: flex; justify-content: center; z-index: 100; }
         .btn-save { background: var(--success); color: white; padding: 16px 45px; border-radius: 50px; font-weight: 900; border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
 
+        #catalog-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: flex-end; }
+        .catalog-content { width: 100%; max-width: 480px; background: var(--bg); border-radius: 32px 32px 0 0; padding: 30px; margin: 0 auto; max-height: 80vh; overflow-y: auto; border-top: 1px solid var(--accent); }
+        
+        /* Исправленные стили для карточки продукта */
+        .product-item { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            gap: 12px;
+        }
+        .product-item:hover { border-color: var(--accent); }
+        .product-main-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .product-title { font-weight: 800; font-size: 0.95rem; }
+        .product-nutrients-detail { font-size: 0.75rem; color: var(--accent); opacity: 0.9; }
+
+        .manual-input { cursor: pointer; border-bottom: 1px dotted var(--accent); }
         #auth-screen input { width: 100%; padding: 16px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 18px; margin-top: 10px; }
     </style>
 </head>
@@ -85,15 +94,32 @@
             <input type="text" id="id-user" placeholder="Name">
             <input type="password" id="id-pass" placeholder="Password">
             <button class="btn-main" onclick="handleLogin()">ENTER SYSTEM</button>
+            <div class="auth-footer">
+                <button class="auth-link" onclick="alert('Reset link sent')">Forgot password?</button>
+                <button class="auth-link" onclick="alert('Registration open')">Create new account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="catalog-panel" onclick="closeCatalog(event)">
+        <div class="catalog-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2 style="margin:0;">🍽️ PRODUCT CATALOG</h2>
+                <button class="btn-tool" onclick="closeCatalog()">CLOSE</button>
+            </div>
+            <div id="product-list-container"></div>
         </div>
     </div>
 
     <div id="main-app">
         <div class="header">
             <div>
-                <span style="color:var(--text-dim); font-size: 0.8rem;">Welcome,</span>
-                <h2 style="margin:0;">haykk! 👋</h2>
-                <div class="streak-badge"><span>🔥 3 DAY STREAK</span></div>
+                <span id="dynamic-greet" style="color:var(--text-dim); font-size: 0.8rem;">Welcome,</span>
+                <h2 style="margin:0; cursor:pointer;" onclick="setGoals()">haykk! 👋</h2>
+                <div class="streak-badge">
+                    <span id="streak-text">🔥 3 DAY STREAK</span>
+                    <span class="xp-text" id="xp-display">XP: 0</span>
+                </div>
             </div>
             <div style="display:flex; gap:6px;">
                 <button class="btn-tool" onclick="toggleTheme()">☀️</button>
@@ -105,7 +131,10 @@
 
         <div class="glass-panel">
             <textarea id="smart-input" placeholder="Smart AI: Paste nutrient info here..." rows="2"></textarea>
-            <button class="btn-main" onclick="smartAnalyze()">ANALYZE DATA</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-main" onclick="smartAnalyze()" style="margin-top:10px;">ANALYZE DATA</button>
+                <button class="btn-main" onclick="openCatalog()" style="margin-top:10px; background: var(--card-bg); border: 1px solid var(--accent); color: var(--accent);">+ PRODUCT</button>
+            </div>
         </div>
 
         <div id="nutrient-list"></div>
@@ -125,25 +154,88 @@
 <script>
     let currentLang = 'EN';
     let history = [];
+    let userXP = 0;
+    let weightMult = 1; 
+    let streakCount = 3;
     const dayNamesRU = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
     const dayNamesEN = ['SU','MO','TU','WE','TH','FR','SA'];
 
-    let nutrients = [
-        { key: 'iron', id: 'Iron', emoji: '🥩', cur: 0, norm: 18, color: '#f87171', weekly: [0,0,0,0,0,0,0], info: "Мясо, шпинат, чечевица." },
-        { key: 'mag', id: 'Magnesium', emoji: '🌿', cur: 0, norm: 400, color: '#34d399', weekly: [0,0,0,0,0,0,0], info: "Орехи, семена, шоколад." },
-        { key: 'vitC', id: 'Vitamin C', emoji: '🍊', cur: 0, norm: 90, color: '#38bdf8', weekly: [0,0,0,0,0,0,0], info: "Цитрусовые, перец, киви." },
-        { key: 'vitB12', id: 'Vitamin B12', emoji: '🧬', cur: 0, norm: 2.4, color: '#a78bfa', weekly: [0,0,0,0,0,0,0], info: "Морепродукты, мясо, яйца." },
-        { key: 'vitD3', id: 'Vitamin D3', emoji: '☀️', cur: 0, norm: 600, color: '#fbbf24', weekly: [0,0,0,0,0,0,0], info: "Солнце, жирная рыба, желток." },
-        { key: 'zinc', id: 'Zinc', emoji: '🐚', cur: 0, norm: 11, color: '#94a3b8', weekly: [0,0,0,0,0,0,0], info: "Устрицы, семечки, говядина." },
-        { key: 'calcium', id: 'Calcium', emoji: '🥛', cur: 0, norm: 1000, color: '#e2e8f0', weekly: [0,0,0,0,0,0,0], info: "Молоко, сыр, кунжут." },
-        { key: 'omega', id: 'Omega-3', emoji: '🐟', cur: 0, norm: 1000, color: '#f472b6', weekly: [0,0,0,0,0,0,0], info: "Рыба, чиа, грецкие орехи." },
-        { key: 'vitA', id: 'Vitamin A', emoji: '🥕', cur: 0, norm: 900, color: '#fb923c', weekly: [0,0,0,0,0,0,0], info: "Морковь, печень, тыква." },
-        { key: 'vitE', id: 'Vitamin E', emoji: '🌻', cur: 0, norm: 15, color: '#a3e635', weekly: [0,0,0,0,0,0,0], info: "Масла, миндаль, шпинат." },
-        { key: 'iodine', id: 'Iodine', emoji: '🌊', cur: 0, norm: 150, color: '#60a5fa', weekly: [0,0,0,0,0,0,0], info: "Водоросли, морепродукты." },
-        { key: 'potassium', id: 'Potassium', emoji: '🍌', cur: 0, norm: 3500, color: '#facc15', weekly: [0,0,0,0,0,0,0], info: "Бананы, картофель, курага." }
+    const products = [
+        { name: "Chicken Egg (1 pc)", icon: "🥚", nutrients: { vitD3: 40, vitB12: 0.5, vitA: 80, calcium: 30 } },
+        { name: "Salmon (100g)", icon: "🐟", nutrients: { omega: 1500, vitD3: 400, vitB12: 4, potassium: 350 } },
+        { name: "Spinach (100g)", icon: "🌿", nutrients: { iron: 2.7, vitA: 450, mag: 80, vitC: 28 } },
+        { name: "Almonds (30g)", icon: "🥜", nutrients: { vitE: 7, mag: 80, calcium: 75, zinc: 1 } },
+        { name: "Beef Steak (100g)", icon: "🥩", nutrients: { iron: 3, zinc: 5, vitB12: 2.5, potassium: 300 } },
+        { name: "Orange (1 pc)", icon: "🍊", nutrients: { vitC: 70, vitA: 10, potassium: 180 } },
+        { name: "Greek Yogurt (150g)", icon: "🥛", nutrients: { calcium: 150, iodine: 30, vitB12: 0.8 } },
+        { name: "Pumpkin Seeds (30g)", icon: "🎃", nutrients: { mag: 150, zinc: 2, iron: 2.5 } }
     ];
 
+    let nutrients = [
+        { key: 'iron', id: 'Iron', emoji: '🥩', cur: 0, norm: 18, color: '#f87171', weekly: [0,0,0,0,0,0,0], info: "Meat, spinach, lentils." },
+        { key: 'mag', id: 'Magnesium', emoji: '🌿', cur: 0, norm: 400, color: '#34d399', weekly: [0,0,0,0,0,0,0], info: "Nuts, seeds, dark leafy greens." },
+        { key: 'vitC', id: 'Vitamin C', emoji: '🍊', cur: 0, norm: 90, color: '#38bdf8', weekly: [0,0,0,0,0,0,0], info: "Citrus, bell peppers, broccoli." },
+        { key: 'vitB12', id: 'Vitamin B12', emoji: '🧬', cur: 0, norm: 2.4, color: '#a78bfa', weekly: [0,0,0,0,0,0,0], info: "Meat, fish, dairy, eggs." },
+        { key: 'vitD3', id: 'Vitamin D3', emoji: '☀️', cur: 0, norm: 600, color: '#fbbf24', weekly: [0,0,0,0,0,0,0], info: "Fatty fish, sunlight, egg yolks." },
+        { key: 'zinc', id: 'Zinc', emoji: '🐚', cur: 0, norm: 11, color: '#94a3b8', weekly: [0,0,0,0,0,0,0], info: "Shellfish, meat, seeds." },
+        { key: 'calcium', id: 'Calcium', emoji: '🥛', cur: 0, norm: 1000, color: '#e2e8f0', weekly: [0,0,0,0,0,0,0], info: "Dairy, kale, fortified foods." },
+        { key: 'omega', id: 'Omega-3', emoji: '🐟', cur: 0, norm: 1000, color: '#f472b6', weekly: [0,0,0,0,0,0,0], info: "Salmon, walnuts, chia seeds." },
+        { key: 'vitA', id: 'Vitamin A', emoji: '🥕', cur: 0, norm: 900, color: '#fb923c', weekly: [0,0,0,0,0,0,0], info: "Carrots, sweet potatoes, liver." },
+        { key: 'vitE', id: 'Vitamin E', emoji: '🌻', cur: 0, norm: 15, color: '#a3e635', weekly: [0,0,0,0,0,0,0], info: "Nuts, seeds, vegetable oils." },
+        { key: 'iodine', id: 'Iodine', emoji: '🌊', cur: 0, norm: 150, color: '#60a5fa', weekly: [0,0,0,0,0,0,0], info: "Seaweed, seafood, iodized salt." },
+        { key: 'potassium', id: 'Potassium', emoji: '🍌', cur: 0, norm: 3500, color: '#facc15', weekly: [0,0,0,0,0,0,0], info: "Bananas, potatoes, beans." }
+    ];
+
+    function setGoals() {
+        let weight = prompt(currentLang === 'RU' ? "Ваш вес (кг) для расчета норм:" : "Your weight (kg) for goal calculation:", "75");
+        if(weight) {
+            weightMult = parseFloat(weight) / 70;
+            userXP += 10;
+            saveToLocal();
+            alert(currentLang === 'RU' ? "Дневные нормы адаптированы под ваш вес!" : "Daily goals adapted to your weight!");
+            render();
+        }
+    }
+
+    function smartAnalyze() {
+        const input = document.getElementById('smart-input').value.toLowerCase();
+        if(!input.trim()) {
+            const demo = products[Math.floor(Math.random() * products.length)];
+            alert(`${currentLang === 'RU' ? 'AI Нашел:' : 'AI Found:'} ${demo.name}`);
+            addNutrientsFromProduct(demo);
+        } else {
+            let found = false;
+            products.forEach(p => {
+                if(input.includes(p.name.toLowerCase().split(' ')[0])) {
+                    addNutrientsFromProduct(p);
+                    found = true;
+                }
+            });
+            if(!found) alert(currentLang === 'RU' ? "Продукт не распознан. Попробуйте из каталога." : "Product not recognized. Use catalog.");
+        }
+        document.getElementById('smart-input').value = "";
+    }
+
+    function addNutrientsFromProduct(product) {
+        Object.entries(product.nutrients).forEach(([key, val]) => {
+            adjustValue(key, val, false);
+        });
+        userXP += 25;
+        saveToLocal();
+        render();
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+
+    function updateXPDisplay() {
+        const level = Math.floor(userXP / 1000) + 1;
+        const xpInLevel = userXP % 1000;
+        document.getElementById('xp-display').innerText = `LVL ${level} | XP: ${xpInLevel}/1000`;
+    }
+
     function handleLogin() {
+        const user = document.getElementById('id-user').value;
+        if(!user) return alert("Enter Name");
+        
         const saved = localStorage.getItem('vitality_final');
         if(saved) {
             const data = JSON.parse(saved);
@@ -153,92 +245,118 @@
             });
             history = data.history || [];
             currentLang = data.lang || 'EN';
+            userXP = data.xp || 0;
+            weightMult = data.weightMult || 1;
+            streakCount = data.streak || 3;
         }
+        
+        updateGreeting();
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         document.getElementById('lang-btn').innerText = currentLang;
+        document.getElementById('streak-text').innerText = `🔥 ${streakCount} DAY STREAK`;
+        updateXPDisplay();
         render();
     }
 
-    function showInfo(key) {
+    function updateGreeting() {
+        const hour = new Date().getHours();
+        const greet = hour < 12 ? "Good Morning," : hour < 18 ? "Good Afternoon," : "Good Evening,";
+        document.getElementById('dynamic-greet').innerText = greet;
+    }
+
+    function clearAllData() { if(confirm("Reset everything?")) { localStorage.removeItem('vitality_final'); location.reload(); } }
+
+    function openCatalog() {
+        document.getElementById('catalog-panel').style.display = 'flex';
+        const list = document.getElementById('product-list-container');
+        list.innerHTML = products.map((p, idx) => `
+            <div class="product-item" onclick="selectProduct(${idx})">
+                <div class="product-main-info">
+                    <div class="product-title">${p.icon} ${p.name}</div>
+                    <div class="product-nutrients-detail">${Object.entries(p.nutrients).map(([k,v]) => `${k}: +${v}`).join(', ')}</div>
+                </div>
+                <button class="btn-tool" style="color:var(--success); border-color: var(--success); min-width: 60px;">ADD</button>
+            </div>
+        `).join('');
+    }
+
+    function closeCatalog() { document.getElementById('catalog-panel').style.display = 'none'; }
+
+    function selectProduct(idx) {
+        addNutrientsFromProduct(products[idx]);
+        closeCatalog();
+    }
+
+    function manualSet(key) {
         const n = nutrients.find(i => i.key === key);
-        alert(`${n.emoji} ${n.id} RECOMMENDATION:\n\nEat: ${n.info}`);
+        const val = prompt(`Value for ${n.id}?`, n.cur);
+        if(val !== null) adjustValue(key, parseFloat(val) - n.cur);
     }
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ RESET
-    function clearAllData() {
-        if(confirm("Are you sure you want to delete everything?")) {
-            localStorage.removeItem('vitality_final');
-            location.reload();
+    function adjustValue(key, delta, shouldRender = true) {
+        const n = nutrients.find(i => i.key === key);
+        const dayIdx = new Date().getDay();
+        n.cur = parseFloat((Math.max(0, n.cur + delta)).toFixed(2));
+        n.weekly[dayIdx] = n.cur;
+        
+        if (delta > 0) userXP += 2;
+        if (delta > 0 && n.cur >= (n.norm * weightMult)) {
+            confetti({ colors: [n.color, '#ffffff'] });
+            userXP += 50;
         }
+        
+        if(shouldRender) { saveToLocal(); render(); }
     }
 
-    function smartAnalyze() {
-        const input = document.getElementById('smart-input').value;
-        if(!input) return;
-        adjustValue('iron', 2); 
-        document.getElementById('smart-input').value = '';
+    function syncAndReset() {
+        const consumed = nutrients.filter(n => n.cur > 0).map(n => `${n.id}: ${n.cur}`).join(', ');
+        const entryName = consumed ? `Logged: ${consumed}` : `Routine Sync Completed`;
+        
+        const healthSteps = Math.floor(Math.random() * 5000) + 2000;
+        history.unshift({ name: `Health Sync: +${healthSteps} steps`, time: "Apple Health " });
+        history.unshift({ name: entryName, time: new Date().toLocaleTimeString() });
+        
+        const saveBtn = document.getElementById('save-text');
+        saveBtn.innerText = "✅ SYNCED!";
+        setTimeout(() => saveBtn.innerText = "💾 SAVE & SYNC", 2000);
+
+        nutrients.forEach(n => n.cur = 0);
+        userXP += 150;
+        saveToLocal(); 
+        confetti(); 
         render();
     }
 
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
-    
-    function toggleLang() {
-        currentLang = (currentLang === 'EN') ? 'RU' : 'EN';
-        document.getElementById('lang-btn').innerText = currentLang;
-        saveToLocal();
-        render();
-    }
-
-    function adjustValue(key, delta) {
-        const n = nutrients.find(i => i.key === key);
-        const dayIdx = new Date().getDay();
-        let step = (key === 'vitB12') ? 0.1 : 1;
-        n.cur = parseFloat((Math.max(0, n.cur + (delta * step))).toFixed(2));
-        n.weekly[dayIdx] = n.cur;
-        if (delta > 0 && n.cur >= n.norm) confetti();
-        saveToLocal();
-        render();
-    }
-
-    function syncAndReset() {
-        const now = new Date();
-        const dayIdx = now.getDay();
-        const dayName = dayNamesEN[dayIdx];
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const logs = nutrients.filter(n => n.cur > 0).map(n => n.id).join(', ');
-        
-        history.unshift({ name: `Sync (${dayName})`, weight: logs || "Daily Sync", time: timeStr });
-        nutrients.forEach(n => { n.cur = 0; });
-
-        saveToLocal();
-        const btnText = document.getElementById('save-text');
-        btnText.innerText = "✅ SYNCED FOR NEXT LOG";
-        confetti();
-        setTimeout(() => { btnText.innerText = "💾 SAVE & SYNC"; render(); }, 2000);
+    function toggleLang() { 
+        currentLang = currentLang === 'EN' ? 'RU' : 'EN'; 
+        document.getElementById('lang-btn').innerText = currentLang; 
+        render(); 
     }
 
     function saveToLocal() {
-        const data = { nutrients, history, lang: currentLang };
-        localStorage.setItem('vitality_final', JSON.stringify(data));
+        localStorage.setItem('vitality_final', JSON.stringify({ 
+            nutrients, history, lang: currentLang, xp: userXP, weightMult, streak: streakCount 
+        }));
+        updateXPDisplay();
     }
 
     function render() {
         const list = document.getElementById('nutrient-list');
         const days = currentLang === 'RU' ? dayNamesRU : dayNamesEN;
-        
         list.innerHTML = nutrients.map(n => {
-            const p = Math.min(100, Math.round((n.cur/n.norm)*100));
+            const currentNorm = n.norm * weightMult;
+            const p = Math.min(100, Math.round((n.cur/currentNorm)*100));
             return `
             <div class="n-card">
                 <div class="n-info">
-                    <div class="clickable-label" onclick="showInfo('${n.key}')">
-                        <span style="font-size:1.2rem">${n.emoji}</span>
-                        <span style="font-weight:800">${n.id}</span>
+                    <div onclick="alert('${n.info}')" style="cursor:pointer">
+                        <span style="font-weight:800">${n.emoji} ${n.id}</span>
                     </div>
                     <div class="controls">
                         <button class="btn-inc" onclick="adjustValue('${n.key}', -1)">-</button>
-                        <span style="font-weight:900; color:${n.color}; min-width:40px; text-align:center">${p}%</span>
+                        <span class="manual-input" style="color:${n.color}; font-weight:900;" onclick="manualSet('${n.key}')">${p}%</span>
                         <button class="btn-inc" onclick="adjustValue('${n.key}', 1)">+</button>
                     </div>
                 </div>
@@ -246,21 +364,20 @@
                 <div class="week-chart">
                     ${n.weekly.map((v, i) => `
                         <div class="day-column">
-                            <div class="day-bar" style="height:${Math.min(100, (v/n.norm)*100)}%; background:${n.color}; opacity:${v>0?1:0.2}"></div>
+                            <div class="day-bar" style="height:${Math.min(100, (v/currentNorm)*100)}%; background:${n.color}; opacity:${v>0?1:0.2}"></div>
                             <div class="day-label">${days[i]}</div>
-                        </div>
-                    `).join('')}
+                        </div>`).join('')}
                 </div>
             </div>`;
         }).join('');
 
         const hList = document.getElementById('history-list');
-        hList.innerHTML = history.map(h => `
+        hList.innerHTML = history.slice(0, 10).map(h => `
             <div class="history-item">
-                <div><b>${h.name}</b><br><small style="color:var(--text-dim)">${h.weight}</small></div>
-                <div style="color:var(--accent); font-weight:900">${h.time}</div>
+                <div style="font-weight:bold; font-size:0.9rem;">${h.name}</div>
+                <div style="color:var(--accent); font-size:0.75rem; margin-top:5px;">${h.time}</div>
             </div>
-        `).join('') || '<p style="text-align:center; color:var(--text-dim)">Ready for logs</p>';
+        `).join('') || '<p style="text-align:center; color:var(--text-dim)">Ready for activity</p>';
     }
 </script>
 </body>
